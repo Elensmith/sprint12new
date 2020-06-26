@@ -2,9 +2,10 @@ const usersRouter = require("express").Router();
 const fsPromises = require("fs").promises;
 
 const path = require("path");
+
 const usersArray = path.join(__dirname, "../data/users.json");
 
-usersRouter.get("/users", (req, res) => {
+usersRouter.get("/", (req, res) => {
   fsPromises
     .readFile(usersArray)
     .then((data) => {
@@ -16,9 +17,10 @@ usersRouter.get("/users", (req, res) => {
     });
 });
 
-usersRouter.get("/users/:id", (req, res) => {
+usersRouter.get("/:id", (req, res) => {
   fsPromises.readFile(usersArray).then((data) => {
     const users = JSON.parse(data);
+    // eslint-disable-next-line no-underscore-dangle
     const user = users.find((element) => element._id === req.params.id);
 
     if (user) {
