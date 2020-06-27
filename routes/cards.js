@@ -1,16 +1,17 @@
 const cardsRouter = require("express").Router();
-const fs = require("fs");
+const fsPromises = require("fs").promises;
 const path = require("path");
+
 const cardsArray = path.join(__dirname, "../data/cards.json");
-const cards = (cd) => {
-  fs.readFile(cardsArray, "utf-8", (err, data) => {
-    if (err) throw err;
-    cd(JSON.parse(data));
-  });
-};
-
 cardsRouter.get("/cards", (req, res) => {
-  cards((data) => res.send(data));
+  fsPromises
+    .readFile(cardsArray)
+    .then((data) => {
+      const cards = JSON.parse(data);
+      res.send(cards);
+    })
+    .catch(() => {
+      res.status(500).send({ message: "С сервером что-то не то" });
+    });
 });
-
 module.exports = cardsRouter;

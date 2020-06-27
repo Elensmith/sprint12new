@@ -4,9 +4,12 @@
     "commonjs": true,
     "es2020": true
   },
-  "extends": ["airbnb-base", "airbnb", "prettier", "prettier/react"],
+  "extends": ["airbnb-base"],
   "parserOptions": {
     "ecmaVersion": 11
   },
-  "rules": {}
+  "rules": {
+    "semi": ["error", "always"],
+    "quotes": ["error", "double"]
+  }
 }
