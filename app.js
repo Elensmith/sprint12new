@@ -4,7 +4,6 @@ const bodyParser = require("body-parser");
 
 const cardsRouter = require("./routes/cards");
 const usersRouter = require("./routes/users");
-const errorForAll = require("./routes/error");
 
 mongoose.connect("mongodb://localhost:27017/mestodb", {
   useNewUrlParser: true,
@@ -29,6 +28,9 @@ app.use((req, res, next) => {
 });
 app.use("/cards", cardsRouter);
 app.use("/users", usersRouter);
-app.use("/", errorForAll);
+app.use((req, res, next) => {
+  res.status(404).json({ message: "Запрашиваемый ресурс не найден" });
+  next();
+});
 
 app.listen(PORT);
