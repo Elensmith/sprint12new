@@ -22,6 +22,7 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
+    minlength: 8,
     select: false,
   },
   about: {
@@ -58,5 +59,4 @@ userSchema.statics.findUserByCredentials = function (email, password) {
       });
     });
 };
-
 module.exports = mongoose.model("user", userSchema);
