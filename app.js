@@ -3,6 +3,8 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const { celebrate, Joi, errors } = require("celebrate");
 
+const { log } = console;
+
 const cardsRouter = require("./routes/cards");
 const usersRouter = require("./routes/users");
 const { createUser, login } = require("./controllers/users");
@@ -27,14 +29,10 @@ app.post(
   celebrate({
     body: Joi.object().keys({
       email: Joi.string().email().required(),
-      password: Joi.string()
-        .min(8)
-        .max(30)
-        .regex(/[a-zA-Z0-9]{3,30}/)
-        .required(),
+      password: Joi.string().min(8).max(30).required(),
     }),
   }),
-  login
+  login,
 );
 app.post(
   "/signup",
@@ -42,16 +40,17 @@ app.post(
     body: Joi.object().keys({
       name: Joi.string().min(2).max(30).required(),
       email: Joi.string().email().required(),
-      password: Joi.string()
-        .min(8)
-        .max(30)
-        .regex(/[a-zA-Z0-9]{3,30}/)
-        .required(),
+      password: Joi.string().min(8).max(30).required(),
       about: Joi.string().min(2).max(30).required(),
-      avatar: Joi.string().uri().trim().required(),
+      avatar: Joi.string()
+        .regex(
+          /^(?:https?:\/\/)(?:www\.)?((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}|[^._www-][a-zA-Z0-9.-]+[.][a-zA-Z]{2,}|[^._www-][a-zA-Z0-9.-]*[.][a-zA-Z]{2,})(:[1-9][0-9]{1,4})?(?:\/(?!\/)[\w\d?~-]*)*#?/,
+        )
+        .trim()
+        .required(),
     }),
   }),
-  createUser
+  createUser,
 );
 app.use("/cards", auth, cardsRouter);
 app.use("/users", auth, usersRouter);
@@ -60,12 +59,15 @@ app.use((req, res, next) => {
   next();
 });
 app.use(errors());
+
 app.use((err, req, res, next) => {
-  res
-    .status(err.statusCode ? err.statusCode : 500)
-    .send({ message: err.message });
+  const { statusCode = 500, message } = err;
+  res.status(statusCode).send({
+    message: statusCode === 500 ? "На сервере произошла ошибка" : message,
+  });
+  next();
 });
-// app.listen(PORT);
+
 app.listen(PORT, () => {
-  console.log("App is listening to port ", PORT);
+  log("App is listening to port ", PORT);
 });
