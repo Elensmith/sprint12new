@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const { celebrate, Joi, errors } = require("celebrate");
+const { requestLogger, errorLogger } = require("./middlewares/logger");
 
 const { log } = console;
 
@@ -24,6 +25,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 const { PORT = 3000 } = process.env;
 
+app.use(requestLogger);
 app.post(
   "/signin",
   celebrate({
@@ -58,6 +60,9 @@ app.use((req, res, next) => {
   res.status(404).json({ message: "Запрашиваемый ресурс не найден" });
   next();
 });
+
+app.use(errorLogger);
+
 app.use(errors());
 
 app.use((err, req, res, next) => {

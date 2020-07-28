@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/users");
 const Unauthorized = require("../errors/unauthorized");
 const NotFound = require("../errors/notFound");
-const BadRequest = require("../errors/badRequest");
+const Conflict = require("../errors/conflict");
 
 module.exports.getUsers = (req, res, next) => {
   User.find({})
@@ -36,12 +36,13 @@ module.exports.createUser = (req, res, next) => {
       email,
       password: hash,
     })
-      .then(() => res.status(201).send({ message: "ok" }))
+      .then(() => res.send({ message: "ok" }))
 
       .catch((err) => {
-        if (err.name === "MongoError" || err.code === 11000) {
-          next(new BadRequest("такая почта уже есть"));
+        if (err.name === "MongoError" || err.code === 11000 || !email) {
+          return next(new Conflict("такая почта уже есть"));
         }
+        return next();
       });
   });
 };
@@ -49,15 +50,18 @@ module.exports.createUser = (req, res, next) => {
 module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
 
-  return User.findUserByCredentials(email, password)
+  User.findUserByCredentials(email, password)
     .then((user) => {
-      if (!user) {
-        return Promise.reject(new Unauthorized("Ошибка авторизации"));
-      }
       const token = jwt.sign({ _id: user._id }, "super-strong-secret", {
         expiresIn: "7d",
       });
-      return res.send({ token });
+      res.send({ token });
     })
-    .catch(next);
+    .catch((err) => {
+      let error;
+      if (err.statusCode === 401) {
+        error = new Unauthorized("Неправильные почта или пароль");
+      }
+      next(error);
+    });
 };

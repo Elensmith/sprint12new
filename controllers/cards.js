@@ -18,14 +18,12 @@ module.exports.deleteCardById = (req, res, next) => {
       if (JSON.stringify(card.owner) !== JSON.stringify(req.user._id)) {
         return Promise.reject(new Unauthorized("Не ваша карточка"));
       }
-      Card.remove(card)
-        .then((removedCard) =>
-          res.send(
-            removedCard !== null
-              ? { data: card }
-              : { data: "Такого объекта не существует" }
-          )
-        )
+      return Card.remove(card)
+        .then((removedCard) => res.send(
+          removedCard !== null
+            ? { data: card }
+            : { data: "Такого объекта не существует" },
+        ))
         .catch(next);
     })
     .catch(next);
@@ -44,6 +42,6 @@ module.exports.createCard = (req, res, next) => {
       if (err.name === "ValidationError") {
         return Promise.reject(new BadRequest("Не ваша карточка"));
       }
-      return next("Произошла ошибка при создании карточки");
+      return next(new Error("Произошла ошибка при создании карточки"));
     });
 };
