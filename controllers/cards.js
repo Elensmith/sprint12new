@@ -1,7 +1,7 @@
 const Card = require("../models/cards");
 const NotFound = require("../errors/notFound");
 const BadRequest = require("../errors/badRequest");
-const Unauthorized = require("../errors/unauthorized");
+const Forbidden = require("../errors/forbidden");
 
 module.exports.getCards = (req, res, next) => {
   Card.find({})
@@ -12,21 +12,14 @@ module.exports.getCards = (req, res, next) => {
 module.exports.deleteCardById = (req, res, next) => {
   Card.findById(req.params.id)
     .then((card) => {
-      if (!card) {
-        return Promise.reject(new NotFound("Карточка не найдена"));
-      }
       if (JSON.stringify(card.owner) !== JSON.stringify(req.user._id)) {
-        return Promise.reject(new Unauthorized("Не ваша карточка"));
+        return Promise.reject(new Forbidden("Не ваша карточка"));
       }
-      return Card.remove(card)
-        .then((removedCard) => res.send(
-          removedCard !== null
-            ? { data: card }
-            : { data: "Такого объекта не существует" },
-        ))
+      return Card.deleteOne(card)
+        .then(() => res.send(card))
         .catch(next);
     })
-    .catch(next);
+    .catch((err) => next(err.statusCode ? err : new NotFound("Карточка не найдена")));
 };
 
 module.exports.createCard = (req, res, next) => {

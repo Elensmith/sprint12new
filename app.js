@@ -8,6 +8,7 @@ const { log } = console;
 
 const cardsRouter = require("./routes/cards");
 const usersRouter = require("./routes/users");
+const NotFound = require("./errors/notFound");
 const { createUser, login } = require("./controllers/users");
 const auth = require("./middlewares/auth");
 
@@ -57,8 +58,7 @@ app.post(
 app.use("/cards", auth, cardsRouter);
 app.use("/users", auth, usersRouter);
 app.use((req, res, next) => {
-  res.status(404).json({ message: "Запрашиваемый ресурс не найден" });
-  next();
+  next(new NotFound("страница не найдена"));
 });
 
 app.use(errorLogger);

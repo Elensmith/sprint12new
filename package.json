@@ -1,6 +1,6 @@
 {
   "name": "sprint14",
-  "version": "3.0.3",
+  "version": "3.0.4",
   "description": "Реализуем аутентификацию и авторизацию в проекте Mesto",
   "main": "app.js",
   "scripts": {
