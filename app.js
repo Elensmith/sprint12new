@@ -32,10 +32,10 @@ app.post(
   celebrate({
     body: Joi.object().keys({
       email: Joi.string().email().required(),
-      password: Joi.string().min(8).max(30).required(),
+      password: Joi.string().required(),
     }),
   }),
-  login,
+  login
 );
 app.post(
   "/signup",
@@ -43,17 +43,17 @@ app.post(
     body: Joi.object().keys({
       name: Joi.string().min(2).max(30).required(),
       email: Joi.string().email().required(),
-      password: Joi.string().min(8).max(30).required(),
+      password: Joi.string().required(),
       about: Joi.string().min(2).max(30).required(),
       avatar: Joi.string()
         .regex(
-          /^(?:https?:\/\/)(?:www\.)?((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}|[^._www-][a-zA-Z0-9.-]+[.][a-zA-Z]{2,}|[^._www-][a-zA-Z0-9.-]*[.][a-zA-Z]{2,})(:[1-9][0-9]{1,4})?(?:\/(?!\/)[\w\d?~-]*)*#?/,
+          /^(?:https?:\/\/)(?:www\.)?((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}|[^._www-][a-zA-Z0-9.-]+[.][a-zA-Z]{2,}|[^._www-][a-zA-Z0-9.-]*[.][a-zA-Z]{2,})(:[1-9][0-9]{1,4})?(?:\/(?!\/)[\w\d?~-]*)*#?/
         )
         .trim()
         .required(),
     }),
   }),
-  createUser,
+  createUser
 );
 app.use("/cards", auth, cardsRouter);
 app.use("/users", auth, usersRouter);

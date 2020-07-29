@@ -16,7 +16,7 @@ module.exports.getUsersById = (req, res, next) => {
     .then((user) => {
       if (!user) {
         return Promise.reject(
-          new NotFound("Такого пользователя не существует"),
+          new NotFound("Такого пользователя не существует")
         );
       }
       return res.send({ data: user });
@@ -25,9 +25,7 @@ module.exports.getUsersById = (req, res, next) => {
 };
 
 module.exports.createUser = (req, res, next) => {
-  const {
-    name, email, password, about, avatar,
-  } = req.body;
+  const { name, email, password, about, avatar } = req.body;
   bcrypt.hash(password, 10).then((hash) => {
     User.create({
       name,
@@ -36,10 +34,12 @@ module.exports.createUser = (req, res, next) => {
       email,
       password: hash,
     })
-      .then(() => res.send({ message: "ok" }))
+      .then(() => {
+        res.send({ name, about, avatar, email });
+      })
 
       .catch((err) => {
-        if (err.name === "MongoError" || err.code === 11000 || !email) {
+        if (err.name === "MongoError" || err.code === 11000) {
           return next(new Conflict("такая почта уже есть"));
         }
         return next();
@@ -58,10 +58,6 @@ module.exports.login = (req, res, next) => {
       res.send({ token });
     })
     .catch((err) => {
-      let error;
-      if (err.statusCode === 401) {
-        error = new Unauthorized("Неправильные почта или пароль");
-      }
-      next(error);
+      next(err);
     });
 };

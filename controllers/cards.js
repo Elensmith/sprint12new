@@ -12,14 +12,16 @@ module.exports.getCards = (req, res, next) => {
 module.exports.deleteCardById = (req, res, next) => {
   Card.findById(req.params.id)
     .then((card) => {
-      if (JSON.stringify(card.owner) !== JSON.stringify(req.user._id)) {
+      if (card.owner.toString() !== req.user._id.toString()) {
         return Promise.reject(new Forbidden("Не ваша карточка"));
       }
       return Card.deleteOne(card)
         .then(() => res.send(card))
         .catch(next);
     })
-    .catch((err) => next(err.statusCode ? err : new NotFound("Карточка не найдена")));
+    .catch((err) =>
+      next(err.statusCode ? err : new NotFound("Карточка не найдена"))
+    );
 };
 
 module.exports.createCard = (req, res, next) => {
