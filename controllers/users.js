@@ -1,7 +1,6 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/users");
-const Unauthorized = require("../errors/unauthorized");
 const NotFound = require("../errors/notFound");
 const Conflict = require("../errors/conflict");
 
@@ -16,7 +15,7 @@ module.exports.getUsersById = (req, res, next) => {
     .then((user) => {
       if (!user) {
         return Promise.reject(
-          new NotFound("Такого пользователя не существует")
+          new NotFound("Такого пользователя не существует"),
         );
       }
       return res.send({ data: user });
@@ -25,7 +24,9 @@ module.exports.getUsersById = (req, res, next) => {
 };
 
 module.exports.createUser = (req, res, next) => {
-  const { name, email, password, about, avatar } = req.body;
+  const {
+    name, email, password, about, avatar,
+  } = req.body;
   bcrypt.hash(password, 10).then((hash) => {
     User.create({
       name,
@@ -35,7 +36,12 @@ module.exports.createUser = (req, res, next) => {
       password: hash,
     })
       .then(() => {
-        res.send({ name, about, avatar, email });
+        res.send({
+          name,
+          about,
+          avatar,
+          email,
+        });
       })
 
       .catch((err) => {
