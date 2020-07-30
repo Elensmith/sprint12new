@@ -46,7 +46,7 @@ module.exports.createUser = (req, res, next) => {
 
       .catch((err) => {
         if (err.name === "MongoError" || err.code === 11000) {
-          return next(new Conflict("такая почта уже есть"));
+          return Promise.reject(new Conflict("такая почта уже есть"));
         }
         return next();
       });
