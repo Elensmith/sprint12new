@@ -1,7 +1,10 @@
 const express = require("express");
+require("dotenv").config();
+
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const { celebrate, Joi, errors } = require("celebrate");
+const { mainError } = require("./middlewares/mainError");
 const { requestLogger, errorLogger } = require("./middlewares/logger");
 
 const { log } = console;
@@ -27,11 +30,20 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const { PORT = 3000 } = process.env;
 
 app.use(requestLogger);
+app.get("/crash-test", () => {
+  setTimeout(() => {
+    throw new Error("Сервер сейчас упадёт");
+  }, 0);
+});
+
 app.post(
   "/signin",
   celebrate({
     body: Joi.object().keys({
-      email: Joi.string().email().required(),
+      email: Joi.string()
+        .email()
+        .required()
+        .error(new Error("Email is a required field!")),
       password: Joi.string().min(8).max(30).required(),
     }),
   }),
@@ -50,7 +62,8 @@ app.post(
           /^(?:https?:\/\/)(?:www\.)?((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}|[^._www-][a-zA-Z0-9.-]+[.][a-zA-Z]{2,}|[^._www-][a-zA-Z0-9.-]*[.][a-zA-Z]{2,})(:[1-9][0-9]{1,4})?(?:\/(?!\/)[\w\d?~-]*)*#?/,
         )
         .trim()
-        .required(),
+        .required()
+        .error(new Error("It is not url")),
     }),
   }),
   createUser,
@@ -65,13 +78,7 @@ app.use(errorLogger);
 
 app.use(errors());
 
-app.use((err, req, res, next) => {
-  const { statusCode = 500, message } = err;
-  res.status(statusCode).send({
-    message: statusCode === 500 ? "На сервере произошла ошибка" : message,
-  });
-  next();
-});
+app.use(mainError);
 
 app.listen(PORT, () => {
   log("App is listening to port ", PORT);
