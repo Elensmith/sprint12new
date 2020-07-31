@@ -1,26 +1,72 @@
-const User = require("../models/users");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
-module.exports.getUsers = (req, res) => {
+const { NODE_ENV, JWT_SECRET } = process.env;
+const User = require("../models/users");
+const NotFound = require("../errors/notFound");
+const Conflict = require("../errors/conflict");
+
+module.exports.getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send({ data: users }))
-    .catch(() => res.status(500).send({ message: "Произошла ошибка" }));
+    .catch(next);
 };
 
-module.exports.getUsersById = (req, res) => {
+module.exports.getUsersById = (req, res, next) => {
   User.findById(req.params.id)
     .then((user) => {
       if (!user) {
-        res.status(404).send({ message: "Нет пользователя с таким id" });
+        return Promise.reject(
+          new NotFound("Такого пользователя не существует"),
+        );
       }
-      res.send({ data: user });
+      return res.send({ data: user });
     })
-    .catch(() => res.status(500).send({ message: "Произошла ошибка" }));
+    .catch(next);
 };
 
-module.exports.createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
+module.exports.createUser = (req, res, next) => {
+  const {
+    name, email, password, about, avatar,
+  } = req.body;
+  bcrypt.hash(password, 10).then((hash) => {
+    User.create({
+      name,
+      about,
+      avatar,
+      email,
+      password: hash,
+    })
+      .then(() => {
+        res.send({
+          name,
+          about,
+          avatar,
+          email,
+        });
+      })
 
-  User.create({ name, about, avatar })
-    .then((user) => res.send({ data: user }))
-    .catch(() => res.status(500).send({ message: "Произошла ошибка при создании юзера" }));
+      .catch((err) => {
+        if (err.name === "MongoError" || err.code === 11000) {
+          return next(new Conflict("такая почта уже есть"));
+        }
+        return next(err);
+      });
+  });
+};
+
+module.exports.login = (req, res, next) => {
+  const { email, password } = req.body;
+
+  User.findUserByCredentials(email, password)
+    .then((user) => {
+      const token = jwt.sign(
+        { _id: user._id },
+        NODE_ENV === "production" ? JWT_SECRET : "dev-secret",
+      );
+      res.send({ token });
+    })
+    .catch((err) => {
+      next(err);
+    });
 };

@@ -1,46 +1,45 @@
 const Card = require("../models/cards");
+const NotFound = require("../errors/notFound");
+const BadRequest = require("../errors/badRequest");
+const Forbidden = require("../errors/forbidden");
 
-module.exports.getCards = (req, res) => {
+module.exports.getCards = (req, res, next) => {
   Card.find({})
     .then((cards) => res.send({ data: cards }))
-    .catch(() => res.status(500).send({ message: "Произошла ошибка" }));
+    .catch(next);
 };
 
-module.exports.deleteCardById = (req, res) => {
-  Card.findByIdAndRemove(req.params.id)
+module.exports.deleteCardById = (req, res, next) => {
+  Card.findById(req.params.id)
+    .then((card) => {
+      if (card === null) {
+        return next(new NotFound("Такой Карточки нет"));
+      }
+      if (card.owner.toString() !== req.user._id.toString()) {
+        return Promise.reject(new Forbidden("Не ваша карточка"));
+      }
+      return Card.deleteOne(card)
+        .then(() => res.send(card))
+        .catch(next);
+    })
+    .catch((err) => {
+      next(err);
+    });
+};
+
+module.exports.createCard = (req, res, next) => {
+  const { name, link } = req.body;
+  Card.create({ name, link, owner: req.user._id })
     .then((card) => {
       if (!card) {
-        res.status(404).send({ message: "Нет карточки с таким id" });
+        return Promise.reject(new BadRequest("Вы что-то не ввели"));
       }
-      res.send({ data: card });
+      return res.send({ data: card });
     })
-    .catch(() => res.status(500).send({ message: "Произошла ошибка" }));
-};
-
-// module.exports.deleteCardById = (req, res) => {
-//   Card.findByIdAndRemove(req.params.id)
-//     .then((card) => {
-//       const { owner } = req.owner;
-//       console.log(req.owner);
-//       if (!card) {
-//         res.status(404).send({ message: "Нет карточки с таким id" });
-//       }
-//       // eslint-disable-next-line no-underscore-dangle
-//       if ({ owner } !== req.user._id) {
-//         res.status(403).send({ message: "Не ваша карточка" });
-//       }
-//       res.send({ data: card });
-//     })
-//     .catch(() => res.status(500).send({ message: "Произошла ошибка" }));
-// };
-
-module.exports.createCard = (req, res) => {
-  // eslint-disable-next-line no-underscore-dangle
-  const userId = req.user._id;
-  const { name, link } = req.body;
-  Card.create({ name, link, owner: userId })
-    .then((card) => res.send({ data: card }))
-    .catch(() => res
-      .status(500)
-      .send({ message: "Произошла ошибка при создании карточки" }));
+    .catch((err) => {
+      if (err.name === "ValidationError") {
+        return Promise.reject(new BadRequest("Не ваша карточка"));
+      }
+      return next(new Error("Произошла ошибка при создании карточки"));
+    });
 };
