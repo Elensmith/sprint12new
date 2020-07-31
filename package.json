@@ -1,6 +1,6 @@
 {
   "name": "sprint15",
-  "version": "4.0.1",
+  "version": "4.0.0",
   "description": "Доделаем бэкенд проекта Mesto и задеплоим его",
   "main": "app.js",
   "scripts": {
