@@ -16,7 +16,9 @@ module.exports.deleteCardById = (req, res, next) => {
         return next(new NotFound("Такой Карточки нет"));
       }
       if (card.owner.toString() !== req.user._id.toString()) {
-        return Promise.reject(new Forbidden("Не ваша карточка"));
+        return Promise.reject(
+          new Forbidden("Вам сюда нельзя, удаляйте свои карточки, пожалуйста"),
+        );
       }
       return Card.deleteOne(card)
         .then(() => res.send(card))

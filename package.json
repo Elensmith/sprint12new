@@ -1,7 +1,7 @@
 {
-  "name": "sprint14",
-  "version": "3.0.9",
-  "description": "Реализуем аутентификацию и авторизацию в проекте Mesto",
+  "name": "sprint15",
+  "version": "4.0.1",
+  "description": "Доделаем бэкенд проекта Mesto и задеплоим его",
   "main": "app.js",
   "scripts": {
     "start": "node app",
